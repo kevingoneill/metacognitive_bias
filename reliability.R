@@ -260,3 +260,8 @@ ggsave('plots/reliability_4.pdf', width=12, height=24)
   coord_fixed(xlim=c(0, 3), ylim=c(0, 3))) +
   plot_annotation(tag_levels='A')
 ggsave('plots/reliability.pdf', width=12, height=12)
+
+
+draws.cor |>
+  filter(str_starts(.variable, 'meta_delta')) |>
+  select(.variable, starts_with('r_1_'))
