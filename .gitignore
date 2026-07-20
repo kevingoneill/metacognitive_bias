@@ -1,0 +1,6 @@
+**/*.*~
+**/*.rds
+
+slides/slides.html
+slides/slides_files
+slides/slides_cache

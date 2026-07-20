@@ -1,0 +1,1290 @@
+---
+title: A measure of metacognitive bias<br>you can be confident in
+author:
+  - name: Kevin O'Neill, Tianqi Zhan, and Stephen M. Fleming
+#    email: "{kevin.o'neill, tianqi.zhan.23, stephen.fleming}&commat;ucl.ac.uk"
+    affiliation:
+      - name: University College London
+        department: Department of Experimental Psychology<br>Institute of Cognitive Neuroscience
+bibliography: citations.bib
+csl: https://github.com/citation-style-language/styles/raw/refs/heads/master/apa.csl
+format: 
+  ucl-revealjs:
+    code-line-numbers: false
+    transition: none
+    progress: false
+    pdf-separate-fragments: true
+    include-in-header:
+      - text: |
+          <script src="fontawesome.js"></script>
+      - file: mathjax-color.html
+#          <script src="https://kit.fontawesome.com/e764ca9de5.js" crossorigin="anonymous"></script>
+# enable tikz figures
+filters:
+  - tikz
+tikz:
+  cache: false
+  save-tex: false
+  tex-dir: tikz-tex   # any path; defaults to 'tikz-tex'
+  svg-command: "pdf2svg {input} {output}"  # use pdf2svg because inkscape breaks fonts
+# R code execution
+knitr:
+  opts_chunk:
+    collapse: true
+    dev: svg
+    dev.args: { bg: "transparent" }
+execute:
+  cache: true
+  warning: false
+  message: false
+  error: false
+embed-resources: true
+---
+
+
+# 
+```{r}
+#| label: model_fits
+#| include: false
+source('model_fits.R')
+```
+
+```{r}
+#| label: helper_functions
+#| include: false
+#| cache: false
+library(tidyverse)
+library(hmetad)
+library(tidybayes)
+library(distributional)
+library(ggdist)
+library(paletteer)
+library(patchwork)
+
+## display a box over a plot for animations
+hide_plot <- function(plot, fill='#fafafa') {
+  plot + inset_element(plot_spacer() +
+                         theme(plot.background=element_rect(fill=fill)),
+                       0, 0, 1, 1, align_to='full')
+}
+
+## default ggplot theme
+theme_metadelta <- function(...,
+                            xlim=c(0, 3), ylim=c(1, 2),
+                            xbreaks=0:3, ybreaks=c(1, 1.5, 2),
+                            xlab='', ylab='',
+                            ink='black', paper='#fafafa') {
+  list(scale_x_continuous(xlab, breaks=xbreaks, expand=expansion()),
+       scale_y_continuous(ylab, breaks=ybreaks, expand=expansion()),
+       theme_bw(base_size=18, ink=ink, paper=paper, ...),
+       theme(plot.background=element_blank(),
+             legend.background=element_blank(),
+             legend.key=element_blank()),
+       coord_cartesian(xlim=xlim, ylim=ylim),
+       scale_color_manual('Response', limits=c(0, 1), breaks=c(0, 1),
+                          ##values=c('#993bff', '#ddbdff')))
+                          values=paletteer_d("fishualize::Phractocephalus_hemioliopterus")[c(1, 3)]))
+}
+
+set_theme(theme_bw(base_size=18, ink='#361a54', paper='#fafafa'))
+
+ALPHA <- .33
+PALETTE <- paletteer_d("fishualize::Phractocephalus_hemioliopterus")[c(1, 3)]
+DIST_COLOR <- paletteer_d("fishualize::Phractocephalus_hemioliopterus")[4]
+DELTA_COLOR <- paletteer_d("fishualize::Phractocephalus_hemioliopterus")[2]
+
+THEME_SDT <- function(xlab='Evidence', limits=c(-2.5, 2.5), base_size=18,
+                      expand=expansion(mult=c(.1, .1)),
+                      ink='black', paper='#fafafa') {
+  list(
+    scale_x_continuous(xlab, limits=limits, breaks=seq(-4, 4, by=2), expand=expand),
+    scale_color_manual('Stimulus', values=PALETTE),
+    scale_fill_manual('Stimulus', values=PALETTE),
+    scale_y_continuous(expand=c(0, 0)),
+    theme_classic(base_size=base_size, ink=ink, paper=paper),
+    theme(axis.title.y=element_blank(),
+          axis.text.y=element_blank(),
+          axis.ticks.y=element_blank(),
+          axis.line.y=element_blank())
+  )
+}
+
+roc2_plot <- function(d, ..., k=NULL, shade=FALSE, point=TRUE,
+                      ink='black', paper='#fafafa') {
+  terms <- names(enquos(..., .named=TRUE))
+  p <- NULL
+
+  if (is.null(k)) {
+    k <- n_distinct(d$confidence) + 1
+  }
+
+  d <- d |> filter(confidence <= k)
+  if (length(terms) == 0) {
+    p <- ggplot(d, aes(x=p_fa2, y=p_hit2))
+  } else {
+    p <- ggplot(d, aes(x=p_fa2, y=p_hit2,
+      color=!!rlang::data_sym(first(terms)),
+      group=interaction(!!!rlang::data_syms(terms))))
+  }
+  
+  p <- p +
+    geom_abline(intercept=0, slope=1, linetype='dotted') +
+    coord_fixed(xlim=c(0, 1), ylim=c(0, 1), expand=FALSE) +
+    scale_x_continuous('P(Confidence ≥ k | Incorrect)', limits=0:1) +
+    scale_y_continuous('P(Confidence ≥ k | Correct)', limits=0:1) +
+    theme_bw(18, ink=ink, paper=paper) +
+    theme(panel.grid=element_blank())
+
+  if (shade) {
+    p <- p + geom_polygon(fill='grey80')
+  }
+  if (point) {
+    p <- p + geom_point()
+  }
+
+  p + geom_path()
+}
+
+type1_plot <- function(evidence, c=TRUE) {
+  p <- ggplot(evidence, aes(xdist=dist_normal(mu1, sd))) +
+    stat_slab(aes(fill=stimulus), color=NA, alpha=.2, scale=.8, show.legend=FALSE) +
+    THEME_SDT(xlab='Type I Evidence', expand=expansion())
+
+  if (c) {
+    p <- p + geom_vline(aes(xintercept=c))
+  }
+  
+  p
+}
+
+type2_plot <- function(evidence, response=1,
+                       c=TRUE, c2=TRUE, labels=TRUE,
+                       limit=2.5, label_y=0.85, expansion=0.01) {
+  p <- ggplot(evidence)
+  if (c) {
+    p <- p + geom_vline(xintercept=first(evidence$c))
+  }
+  
+  if (response == 'zero' || response==0 || response=='0') {
+    p <- p +
+      stat_slab(aes(xdist=dist_truncated(dist_normal(mu2, sd), upper=c), fill=stimulus),
+                color=NA, alpha=ALPHA, scale=.8, show.legend=FALSE) +
+      THEME_SDT(xlab=paste0('Type II Evidence\n("', response, '" Response)'),
+                limits=c(-limit, first(evidence$c)),
+                expand=expansion(add=c(0, expansion)))
+    
+    if (c2) {
+      p <- p + geom_vline(xintercept=first(evidence$c2_0), linetype='dashed', color=PALETTE[1])
+    }
+    if (labels) {
+      p <- p +
+        geom_text(aes(x=x, y=y, label=label),
+                  data=tibble(x=(first(evidence$c) + first(evidence$c2_0))/2,
+                              y=label_y, label="C = low"), fontface='bold') +
+        geom_text(aes(x=x, y=y, label=label),
+                  data=tibble(x=(first(evidence$c2_0) - limit)/2,
+                              y=label_y, label="C = high"), fontface='bold')
+    }
+  } else if (response == 'one' || response==1 || response=='1') {
+    p <- p +
+      stat_slab(aes(xdist=dist_truncated(dist_normal(mu2, sd), lower=c), fill=stimulus),
+                color=NA, alpha=ALPHA, scale=.8, show.legend=FALSE) +
+      THEME_SDT(xlab=paste0('Type II Evidence\n("', response, '" Response)'),
+                limits=c(first(evidence$c), limit),
+                expand=expansion(add=c(expansion, 0)))
+    if (c2) {
+      p <- p + geom_vline(xintercept=first(evidence$c2_1), linetype='dashed', color=PALETTE[2])
+    }
+    if (labels) {
+      p <- p +
+        geom_text(aes(x=x, y=y, label=label),
+                  data=tibble(x=(first(evidence$c) + first(evidence$c2_1))/2,
+                              y=label_y, label="C = low"), fontface='bold') +
+        geom_text(aes(x=x, y=y, label=label),
+                  data=tibble(x=(first(evidence$c2_1) + limit)/2,
+                              y=label_y, label="C = high"), fontface='bold')
+    }
+  }
+
+  p
+}
+```
+
+<!--
+:::{.fragment .absolute top=50 left=0 style="font-size: 5em;"}
+<i class="fa-solid fa-person-circle-question"></i>
+:::
+
+:::{.fragment .absolute top=50 left=375 style="font-size: 5em;"}
+<i class="fa-solid fa-user-doctor"></i>
+:::
+
+:::{.fragment .absolute top=0 left=550 style="font-size: 3em;"}
+<i class="fa-solid fa-comment-medical"></i>
+:::
+
+:::{.fragment .absolute top=50 left=750 style="font-size: 5em;"}
+<i class="fa-solid fa-champagne-glasses"></i>
+:::
+
+:::{.fragment .absolute top=350 left=400 style="font-size: 5em;" .fade-in-then-out}
+<i class="fa-solid fa-question"></i>
+:::
+
+:::{.fragment .absolute top=350 left=400 style="font-size: 5em;"}
+<i class="fa-solid fa-hospital"></i>
+:::
+-->
+
+:::{.fragment .absolute top=0 left=200 style="font-size: 5em;"}
+<i class="fa-solid fa-check"></i>
+:::
+
+:::{.fragment .absolute top=0 left=600 style="font-size: 5em;"}
+<i class="fa-solid fa-question"></i>
+:::
+
+
+
+## Confidence matters
+
+:::{.incremental}
+- Group decision-making [[@bang2017confidence; @bang2020private]]{.tiny}
+- Advice giving and taking [[@hertz2017neural; @pescetelli2021confidence]]{.tiny}
+- Information seeking [[@schulz2023; @vanMarcke2025]]{.tiny}
+- Self-beliefs [[@katyal2025; @seow2021local]]{.tiny}
+- Mental health [[@katyal2026; @hoven2019; @rouault2018psychiatric]]{.tiny}
+:::
+
+# A problem {.dark}
+
+[We don't know how to measure confidence bias!]{.fragment}
+
+
+## An empirical approach
+
+If we're interested in one's overall level of confidence, 
+let's simply compute mean confidence!
+
+:::{.tiny}
+<br>
+:::
+
+:::{.fragment}
+$$
+\mathbb{E}\left[C\right] = \frac{1}{N}\sum_n C_n = \sum_c P(C=c) c
+$$
+:::
+
+:::{.fragment .fade-out style="background-color: #fafafa;" .absolute bottom=275 right=160 width=350 height=125}
+
+:::
+
+:::{.tiny}
+<br>
+:::
+
+[**Pro:** high face validity]{.fragment .smaller}
+
+[**Con:** confounded with Type I performance]{.fragment .smaller}
+
+
+
+# The psychophysics of metacognition {.dark}
+
+## Type I and Type II decisions
+
+<br>
+
+:::{.r-stack height=600}
+
+::::{.fragment .center-flex}
+```{.tikz width=1000}
+%%| filename: type1type2_1
+%%| additionalPackages: \usepackage{cmbright}
+\include{tikz_header.tex}
+\begin{tikzpicture}
+	\node[image] (stimulus) { \includegraphics[width=1cm]{figures/gabor.png} };
+	\node[hidden] (response) [right = of stimulus] {
+		Present? \\ 
+		N \hspace{.25em} Y
+	};
+	\node[hidden] (confidence) [right = of response] { 
+		Confidence? \\
+		1 \hspace{.1em} 2 \hspace{.1em} 3 \hspace{.1em} 4 
+	};
+	\path[hidden] (stimulus) edge (response);
+	\path[hidden] (response) edge (confidence);
+    
+    \node[unboxed, hidden] (type1) [below = 0.5cm of response] { Type I \\ Decision };
+    \node[unboxed, hidden] (type2) [below = 0.5cm of confidence] { Type II \\ Decision };
+\end{tikzpicture}
+```
+::::
+
+::::{.fragment .center-flex}
+```{.tikz width=1000}
+%%| filename: type1type2_2
+%%| additionalPackages: \usepackage{cmbright}
+\include{tikz_header.tex}
+\begin{tikzpicture}
+	\node[image] (stimulus) { \includegraphics[width=1cm]{figures/gabor.png} };
+	\node (response) [right = of stimulus] {
+		Present? \\ 
+		N \hspace{.25em} Y
+	};
+	\node[hidden] (confidence) [right = of response] { 
+		Confidence? \\
+		1 \hspace{.1em} 2 \hspace{.1em} 3 \hspace{.1em} 4 
+	};
+	\path (stimulus) edge (response);
+	\path[hidden] (response) edge (confidence);
+    
+    \node[unboxed, hidden] (type1) [below = 0.5cm of response] { Type I \\ Decision };
+    \node[unboxed, hidden] (type2) [below = 0.5cm of confidence] { Type II \\ Decision };
+\end{tikzpicture}
+```
+::::
+
+::::{.fragment .center-flex}
+```{.tikz width=1000}
+%%| filename: type1type2_3
+%%| additionalPackages: \usepackage{cmbright}
+\include{tikz_header.tex}
+\begin{tikzpicture}
+	\node[image] (stimulus) { \includegraphics[width=1cm]{figures/gabor.png} };
+	\node (response) [right = of stimulus] {
+		Present? \\ 
+		N \hspace{.25em} Y
+	};
+	\node (confidence) [right = of response] { 
+		Confidence? \\
+		1 \hspace{.1em} 2 \hspace{.1em} 3 \hspace{.1em} 4 
+	};
+	\path (stimulus) edge (response);
+	\path (response) edge (confidence);
+    
+    \node[unboxed, hidden] (type1) [below = 0.5cm of response] { Type I \\ Decision };
+    \node[unboxed, hidden] (type2) [below = 0.5cm of confidence] { Type II \\ Decision };
+\end{tikzpicture}
+```
+::::
+
+::::{.fragment .center-flex}
+```{.tikz width=1000}
+%%| filename: type1type2_4
+%%| additionalPackages: \usepackage{cmbright}
+\include{tikz_header.tex}
+\begin{tikzpicture}
+	\node[image] (stimulus) { \includegraphics[width=1cm]{figures/gabor.png} };
+	\node (response) [right = of stimulus] {
+		Present? \\ 
+		N \hspace{.25em} Y
+	};
+	\node (confidence) [right = of response] { 
+		Confidence? \\
+		1 \hspace{.1em} 2 \hspace{.1em} 3 \hspace{.1em} 4 
+	};
+	\path (stimulus) edge (response);
+	\path (response) edge (confidence);
+    
+    \node[unboxed] (type1) [below = 0.5cm of response] { Type I \\ Decision };
+    \node[unboxed] (type2) [below = 0.5cm of confidence] { Type II \\ Decision };
+\end{tikzpicture}
+```
+::::
+:::
+
+::: { .tiny .right .bottom}
+@clarke1959
+:::
+
+
+## Quantifying Type I decisions
+
+:::{.tiny}
+<br>
+:::
+
+:::{.columns}
+::::{.column width="40%" .fragment .dark .box .much-smaller fragment-index=2}
+### Sensitivity ($d'$)
+
+How much do responses distinguish between stimuli?
+::::
+
+::::{.column width="10%"}
+::::
+
+::::{.column width="40%" .fragment .dark .box .much-smaller fragment-index=3}
+### Response Bias ($c$)
+
+Is one response more likely overall?
+::::
+:::
+
+:::{style="height: 10px; display: block;"}
+
+:::
+
+:::{.r-stack}
+::::{.fragment fragment-index=1}
+```{r}
+#| label: fig_evidence_1
+#| fig-width: 8
+#| fig-height: 3
+evidence <- tibble(stimulus=factor(0:1),
+                   d_prime=1.5, c=0.5, meta_d_prime=1,
+                   mu1=c(-1, 1)*d_prime/2, sd=1,
+                   mu2=c(-1, 1)*meta_d_prime/2,
+                   c2_0=-1, c2_1=1)
+
+p <- type1_plot(evidence, c=FALSE)
+p
+```
+::::
+
+::::{.fragment fragment-index=2}
+```{r}
+#| label: fig_evidence_2
+#| fig-width: 8
+#| fig-height: 3
+p <- p + geom_errorbar(aes(x=x, y=y, xmin=x, xmax=xend), inherit.aes=FALSE, width=.05,
+  data=tibble(x=-evidence$d_prime[1]/2, xend=evidence$d_prime[1]/2, y=.8)) +
+  geom_text(aes(x=x, y=y, label=label), inherit.aes=FALSE,
+    data=tibble(x=0, y=.925, label="d'"))
+p
+```
+::::
+
+::::{.fragment fragment-index=3}
+```{r}
+#| label: fig_evidence_3
+#| fig-width: 8
+#| fig-height: 3
+p <- p + geom_vline(aes(xintercept=c)) +
+  geom_text(aes(x=x, y=y, label=label), inherit.aes=FALSE,
+    data=tibble(x=evidence$c[1]+.15, y=.2, label="c"))
+p
+```
+::::
+
+::::{.fragment fragment-index=4}
+```{r}
+#| label: fig_evidence_4
+#| fig-width: 8
+#| fig-height: 3
+p <- p + geom_text(aes(x=x, y=y, label=label), inherit.aes=FALSE,
+  data=tibble(x=evidence$c[1]-1, y=.2, label="R=0"), color=PALETTE[1], fontface='bold') +
+  geom_text(aes(x=x, y=y, label=label), inherit.aes=FALSE,
+    data=tibble(x=evidence$c[1]+1, y=.2, label="R=1"), color=PALETTE[2], fontface='bold')
+p
+```
+::::
+:::
+
+::: { .tiny .right .bottom}
+@green1966
+:::
+
+
+## Quantifying Type I decisions
+
+<br>
+
+:::{.much-smaller}
+|                  |   Stimulus = 0    | Stimulus = 1 |
+|:----------------:|:-----------------:|:------------:|
+| **Response = 0** | Correct Rejection |     Miss     |
+| **Response = 1** |    False Alarm    |     Hit      |
+:::
+
+
+::: { .tiny .right .bottom}
+@green1966
+:::
+
+
+## Quantifying Type II decisions
+
+<br>
+
+:::{.r-stack .much-smaller}
+::::{.fragment .fade-out fragment-index=1 }
+|                  |   Stimulus = 0    | Stimulus = 1 |
+|:----------------:|:-----------------:|:------------:|
+| **Response = 0** | Correct Rejection |     Miss     |
+| **Response = 1** |    False Alarm    |     Hit      |
+::::
+
+::::{.fragment fragment-index=1}
+|                       |   Accuracy = 0      | Accuracy = 1  |
+|:---------------------:|:-------------------:|:-------------:|
+| **Confidence = low**  | Correct Rejection 2 |     Miss 2    |
+| **Confidence = high** |    False Alarm 2    |     Hit 2     |
+::::
+:::
+
+<br>
+
+:::{.fragment fragment-index=2}
+We can extend signal detection theory<br>to model confidence ratings!
+:::
+
+::: { .tiny .right .bottom}
+@fleming2014
+:::
+
+
+# The meta-d' model of confidence ratings {.dark}
+
+## The meta-d' model
+
+:::{.r-stack}
+```{r}
+#| label: type2_evidence_1
+#| fig-width: 12
+#| fig-height: 6
+p.type1 <- type1_plot(evidence)
+p.type2.0 <- type2_plot(evidence, response=0)
+p.type2.1 <- type2_plot(evidence, response=1, c2=FALSE, labels=FALSE)
+offset <- (first(evidence$c)+2.5) / 5
+
+p.type1 /
+   (hide_plot(p.type2.0) | hide_plot(p.type2.1)) +
+      plot_layout(widths=c(offset, 1-offset))
+```
+
+::::{.fragment}
+```{r}
+#| label: type2_evidence_2
+#| fig-width: 12
+#| fig-height: 6
+p.type1 /
+  ((hide_plot(p.type2.0) | p.type2.1) +
+     plot_layout(widths=c(offset, 1-offset)))
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: type2_evidence_3
+#| fig-width: 12
+#| fig-height: 6
+p.type2.1 <- type2_plot(evidence, response=1, c2=TRUE, labels=TRUE)
+p.type1 /
+  ((hide_plot(p.type2.0) | p.type2.1) +
+     plot_layout(widths=c(offset, 1-offset)))
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: type2_evidence_4
+#| fig-width: 12
+#| fig-height: 6
+p.type1 /
+  ((p.type2.0 | p.type2.1) +
+     plot_layout(widths=c(offset, 1-offset)))
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: type2_evidence_5
+#| fig-width: 12
+#| fig-height: 6
+evidence.high <- tibble(stimulus=factor(0:1),
+                   d_prime=1.5, c=0.5, meta_d_prime=3,
+                   mu1=c(-1, 1)*d_prime/2, sd=1,
+                   mu2=c(-1, 1)*meta_d_prime/2,
+                   c2_0=-1, c2_1=1)
+
+p.type1.high <- type1_plot(evidence.high)
+p.type2.0.high <- type2_plot(evidence.high, response=0)
+p.type2.1.high <- type2_plot(evidence.high, response=1)
+offset.high <- (first(evidence.high$c)+2.5) / 5
+
+p.type1.high /
+  ((p.type2.0.high | p.type2.1.high) +
+     plot_layout(widths=c(offset.high, 1-offset.high)))
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: type2_evidence_6
+#| fig-width: 12
+#| fig-height: 6
+evidence.low <- tibble(stimulus=factor(0:1),
+                   d_prime=1.5, c=0.5, meta_d_prime=0.25,
+                   mu1=c(-1, 1)*d_prime/2, sd=1,
+                   mu2=c(-1, 1)*meta_d_prime/2,
+                   c2_0=-1, c2_1=1)
+
+p.type1.low <- type1_plot(evidence.low)
+p.type2.0.low <- type2_plot(evidence.low, response=0)
+p.type2.1.low <- type2_plot(evidence.low, response=1)
+offset.low <- (first(evidence.low$c)+2.5) / 5
+
+p.type1.low /
+  ((p.type2.0.low | p.type2.1.low) +
+      plot_layout(widths=c(offset.low, 1-offset.low)))
+```
+::::
+
+:::
+
+::: { .tiny .right .bottom}
+@maniscalco2012; @maniscalco2014
+:::
+
+
+## The meta-d' model
+
+We can directly compare sensitivity<br>for Type I and Type II decisions:
+
+:::{.tiny}
+<br>
+:::
+
+:::{.fragment}
+::::{.larger}
+$$
+\begin{align*}
+M &= \frac{\textrm{meta-}d'}{d'}
+\end{align*}
+$$
+::::
+
+::::{style="color: #993bff;"}
+[metacognitive sensitivity]{.tiny .absolute bottom=325 left=750}
+[Type I sensitivity]{.tiny .absolute bottom=250 left=750}
+
+:::::{.tiny .absolute bottom=275 left=150 style="text-align: right;"}
+metacognitive<br>efficiency
+:::::
+::::
+:::
+
+[$M$-ratio is an independent measure of <br>
+the relationship between confidence and accuracy]{.fragment}
+
+# Metacognitive bias {.dark}
+
+
+## $m$-distance
+
+<br>
+
+:::{.r-stack}
+::::{.fragment}
+```{r}
+#| label: mdistance_1
+#| fig-width: 12
+#| fig-height: 4
+(p.type2.0 | p.type2.1) +
+  plot_layout(widths=c(offset, 1-offset))
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: mdistance_2
+#| fig-width: 12
+#| fig-height: 4
+((p.type2.0 +
+    geom_errorbar(aes(y=y, xmin=xmin, xmax=xmax),
+                  data=tibble(y=.95, xmin=first(evidence$c2_0)+.05, xmax=first(evidence$c)-.05),
+                  color='#ba82ff', width=.05, inherit.aes=FALSE)) |
+   (p.type2.1 +
+      geom_errorbar(aes(y=y, xmin=xmin, xmax=xmax),
+                    data=tibble(y=.95, xmin=first(evidence$c)+.05, xmax=first(evidence$c2_1)-.05),
+                    color='#ba82ff', width=.05, inherit.aes=FALSE))) +
+  plot_layout(widths=c(offset, 1-offset))
+```
+::::
+
+
+::::{.fragment}
+```{r}
+#| label: mdistance_3
+#| fig-width: 12
+#| fig-height: 4
+evidence.bias <- tibble(stimulus=factor(0:1),
+                        d_prime=1.5, c=0.5, meta_d_prime=1,
+                        mu1=c(-1, 1)*d_prime/2, sd=1,
+                        mu2=c(-1, 1)*meta_d_prime/2,
+                        c2_0=-2, c2_1=2)
+
+p.type2.0 <- type2_plot(evidence.bias, response=0)
+p.type2.1 <- type2_plot(evidence.bias, response=1)
+
+((p.type2.0 +
+    geom_errorbar(aes(y=y, xmin=xmin, xmax=xmax),
+                  data=tibble(y=.95, xmin=first(evidence.bias$c2_0)+.05,
+                              xmax=first(evidence.bias$c)-.05),
+                  color='#ba82ff', width=.05, inherit.aes=FALSE)) |
+   (p.type2.1 +
+      geom_errorbar(aes(y=y, xmin=xmin, xmax=xmax),
+                    data=tibble(y=.95, xmin=first(evidence.bias$c)+.05,
+                                xmax=first(evidence.bias$c2_1)-.05),
+                    color='#ba82ff', width=.05, inherit.aes=FALSE))) +
+  plot_layout(widths=c(offset, 1-offset))
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: mdistance_4
+#| fig-width: 12
+#| fig-height: 4
+evidence.bias2 <- tibble(stimulus=factor(0:1),
+                         d_prime=1.5, c=0.5, meta_d_prime=1,
+                         mu1=c(-1, 1)*d_prime/2, sd=1,
+                         mu2=c(-1, 1)*meta_d_prime/2,
+                         c2_0=-.25, c2_1=.9)
+
+p.type2.0 <- type2_plot(evidence.bias2, response=0)
+p.type2.1 <- type2_plot(evidence.bias2, response=1)
+
+((p.type2.0 +
+    geom_errorbar(aes(y=y, xmin=xmin, xmax=xmax),
+                  data=tibble(y=.95, xmin=first(evidence.bias2$c2_0)+.05,
+                              xmax=first(evidence.bias2$c)-.05),
+                  color='#ba82ff', width=.05, inherit.aes=FALSE)) |
+   (p.type2.1 +
+      geom_errorbar(aes(y=y, xmin=xmin, xmax=xmax),
+                    data=tibble(y=.95, xmin=first(evidence.bias2$c)+.05,
+                                xmax=first(evidence.bias2$c2_1)-.05),
+                    color='#ba82ff', width=.05, inherit.aes=FALSE))) +
+  plot_layout(widths=c(offset, 1-offset))
+```
+::::
+:::
+
+
+
+:::{.tiny .right .bottom}
+@sherman2018
+:::
+
+
+## $m$-distance
+
+<br>
+
+:::{.columns .much-smaller}
+::::{.column width="50%"}
+$$
+m\textrm{-distance}_0 = \frac{\textrm{meta-}c - \textrm{meta-}c_2^0}{\textrm{meta-}d'}
+$$
+::::
+
+::::{.column width="50%"}
+$$
+m\textrm{-distance}_1 = \frac{\textrm{meta-}c_2^1 - \textrm{meta-}c}{\textrm{meta-}d'}
+$$
+::::
+:::
+
+<br>
+
+[**Pro:** independent of Type I criterion]{.fragment .smaller}
+
+[**Con:** only defined for models with two confidence levels]{.fragment .smaller}
+
+[**Con:** still confounded with Type I performance]{.fragment .smaller}
+
+:::{.tiny .right .bottom}
+@sherman2018
+:::
+
+
+## meta-$\Delta$
+
+:::{.tiny}
+<br>
+:::
+
+**Same idea, with two adjustments:**
+
+:::{.incremental .much-smaller}
+  1. Don't normalize distances by meta-$d'$ [@dijkstra2024]
+  2. Take the average of all confidence criteria
+:::
+
+:::{.r-stack}
+::::{.fragment .fade-in-then-out}
+\begin{align*}
+    \textrm{meta-}\Delta_r &= \left|\frac{1}{K-1}\sum_{k=1}^{K-1}\left[\textrm{meta-}c_{2,k}^r\right] - \textrm{meta-}c\right|
+\end{align*}
+:::
+
+::::{.fragment}
+\begin{align*}
+    \textrm{meta-}\Delta_r &= \sum_{k=1}^{K-1} \frac{K - k}{K-1}\textrm{dmeta-}c_{2,k}^r
+\end{align*}
+::::
+:::
+
+
+# Does this idea work? {.dark}
+
+## Both measures are sensitive to metacognitive bias {.smaller}
+
+:::{.r-stack}
+::::{.fragment}
+```{r}
+#| label: fig_sensitivity_1
+#| fig-width: 8
+#| fig-height: 6
+p.c2_0.conf <- fits.c2_0 |>
+  pivot_longer(mean_conf0:mean_conf1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=c2_0_diff, y=value, color=response)) +
+  theme_metadelta(xlab=expression('dmeta-c'[2]^0), ylab='Mean Confidence') +
+  geom_line(data=~ filter(., response==0), show.legend=TRUE, linewidth=1.5)
+p.c2_1.conf <- fits.c2_1 |>
+  pivot_longer(mean_conf0:mean_conf1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=c2_1_diff, y=value, color=response)) +
+  theme_metadelta(xlab=expression('dmeta-c'[2]^1), ylab='Mean Confidence') +
+     geom_line(data=~ filter(., response==1), show.legend=TRUE, linewidth=1.5)
+
+p.c2_0.metadelta <- fits.c2_0 |>
+  pivot_longer(metadelta0:metadelta1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=c2_0_diff, y=value, color=response)) +
+  theme_metadelta(ylim=c(0, 3), ybreaks=0:3,
+                  xlab=expression('dmeta-c'[2]^0), ylab=expression('meta-'*Delta)) +
+  geom_line(data=~ filter(., response==0), show.legend=TRUE, linewidth=1.5)
+p.c2_1.metadelta <- fits.c2_1 |>
+  pivot_longer(metadelta0:metadelta1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=c2_1_diff, y=value, color=response)) +
+  theme_metadelta(ylim=c(0, 3), ybreaks=0:3,
+                  xlab=expression('dmeta-c'[2]^1), ylab=expression('meta-'*Delta)) +
+     geom_line(data=~ filter(., response==1), show.legend=TRUE, linewidth=1.5)
+
+p.c2_0.conf + hide_plot(p.c2_1.conf) +
+  hide_plot(p.c2_0.metadelta) + hide_plot(p.c2_1.metadelta) +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_sensitivity_2
+#| fig-width: 8
+#| fig-height: 6
+p.c2_0.conf + p.c2_1.conf +
+  hide_plot(p.c2_0.metadelta) + hide_plot(p.c2_1.metadelta) +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_sensitivity_3
+#| fig-width: 8
+#| fig-height: 6
+p.c2_0.conf + p.c2_1.conf +
+  p.c2_0.metadelta + p.c2_1.metadelta +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_sensitivity_4
+#| fig-width: 8
+#| fig-height: 6
+p.c2_0.conf <- p.c2_0.conf +
+  geom_line(data=~ filter(., response==1), show.legend=TRUE, linewidth=1.5)
+p.c2_1.conf <- p.c2_1.conf +
+  geom_line(data=~ filter(., response==0), show.legend=TRUE, linewidth=1.5)
+p.c2_0.metadelta <- p.c2_0.metadelta +
+  geom_line(data=~ filter(., response==1), show.legend=TRUE, linewidth=1.5)
+p.c2_1.metadelta <- p.c2_1.metadelta +
+  geom_line(data=~ filter(., response==0), show.legend=TRUE, linewidth=1.5)
+
+p.c2_0.conf + p.c2_1.conf +
+  p.c2_0.metadelta + p.c2_1.metadelta +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+:::
+
+
+## Mean confidence is confounded by Type I performance
+
+:::{.r-stack}
+::::{.fragment}
+```{r}
+#| label: fig_specificity_1
+#| fig-width: 12
+#| fig-height: 6
+p.c.conf <- fits.c |>
+  pivot_longer(mean_conf0:mean_conf1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=c, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab='c', ylab='Mean Confidence',
+                  xlim=c(-1.5, 1.5), xbreaks=-1:1)
+p.c.metadelta <- fits.c |>
+  pivot_longer(metadelta0:metadelta1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=c, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab='c', ylab=expression('meta-'*Delta),
+                  xlim=c(-1.5, 1.5), xbreaks=-1:1, ylim=c(0, 1), ybreaks=c(0, 0.5, 1))
+
+p.dprime.conf <- fits.dprime |>
+  pivot_longer(starts_with('mean_conf'), names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=dprime, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab="d'", ylab='Mean Confidence', xlim=c(0, 3))
+p.dprime.metadelta <- fits.dprime |>
+  pivot_longer(metadelta0:metadelta1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=dprime, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab="d'", ylab=expression('meta-'*Delta),
+                  xlim=c(0, 3), ylim=c(0, 1), ybreaks=c(0, 0.5, 1))
+
+p.meta_dprime.conf <- fits.meta_dprime |>
+  pivot_longer(starts_with('mean_conf'), names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=meta_dprime, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab="meta-d'", ylab='Mean Confidence', xlim=c(0, 3))
+p.meta_dprime.metadelta <- fits.meta_dprime |>
+  pivot_longer(metadelta0:metadelta1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=meta_dprime, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab="meta-d'", ylab=expression('meta-'*Delta),
+                  xlim=c(0, 3), ylim=c(0, 1), ybreaks=c(0, 0.5, 1))
+
+p.c.conf + hide_plot(p.dprime.conf) + hide_plot(p.meta_dprime.conf) +
+  hide_plot(p.c.metadelta) + hide_plot(p.dprime.metadelta) + hide_plot(p.meta_dprime.metadelta) +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_specificity_2
+#| fig-width: 12
+#| fig-height: 6
+p.c.conf + p.dprime.conf + hide_plot(p.meta_dprime.conf) +
+  hide_plot(p.c.metadelta) + hide_plot(p.dprime.metadelta) + hide_plot(p.meta_dprime.metadelta) +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_specificity_3
+#| fig-width: 12
+#| fig-height: 6
+p.c.conf + p.dprime.conf + p.meta_dprime.conf +
+  hide_plot(p.c.metadelta) + hide_plot(p.dprime.metadelta) + hide_plot(p.meta_dprime.metadelta) +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_specificity_4
+#| fig-width: 12
+#| fig-height: 6
+p.c.conf + p.dprime.conf + p.meta_dprime.conf +
+  p.c.metadelta + p.dprime.metadelta + p.meta_dprime.metadelta +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+:::
+
+
+## Both measures fail under<br>model misspecification
+
+:::{.r-stack}
+::::{.fragment}
+```{r}
+#| label: fig_misspecification_1
+#| fig-width: 12
+#| fig-height: 6
+p.c.conf <- fits.c.mis |>
+  pivot_longer(mean_conf0:mean_conf1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=c, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab='c', ylab='Mean Confidence',
+                  xlim=c(-1.5, 1.5), xbreaks=-1:1, ylim=c(1, 2))
+p.c.metadelta <- fits.c.mis |>
+  pivot_longer(metadelta0:metadelta1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=c, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab='c', ylab=expression('meta-'*Delta),
+                  xlim=c(-1.5, 1.5), xbreaks=-1:1, ylim=c(0, 1), ybreaks=c(0, 0.5, 1))
+
+p.dprime.conf <- fits.dprime.mis |>
+  pivot_longer(starts_with('mean_conf'), names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=dprime, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab="d'", ylab='Mean Confidence', xlim=c(0, 3), ylim=c(1, 2))
+p.dprime.metadelta <- fits.dprime.mis |>
+  pivot_longer(metadelta0:metadelta1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=dprime, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab="d'", ylab=expression('meta-'*Delta),
+                  xlim=c(0, 3), ylim=c(0, 1), ybreaks=c(0, 0.5, 1))
+
+p.meta_dprime.conf <- fits.meta_dprime.mis |>
+  pivot_longer(starts_with('mean_conf'), names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=meta_dprime, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab="meta-d'", ylab='Mean Confidence', xlim=c(0, 3), ylim=c(1, 2))
+p.meta_dprime.metadelta <- fits.meta_dprime.mis |>
+  pivot_longer(metadelta0:metadelta1, names_to='response') |>
+  mutate(response=str_match(response, '[[:digit:]]')) |>
+  ggplot(aes(x=meta_dprime, y=value, color=response)) +
+  geom_line(linewidth=1.5) +
+  theme_metadelta(xlab="meta-d'", ylab=expression('meta-'*Delta),
+                  xlim=c(0, 3), ylim=c(0, 1), ybreaks=c(0, 0.5, 1))
+
+p.c.conf + p.dprime.conf + p.meta_dprime.conf +
+  hide_plot(p.c.metadelta) + hide_plot(p.dprime.metadelta) + hide_plot(p.meta_dprime.metadelta) +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_misspecification_2
+#| fig-width: 12
+#| fig-height: 6
+p.c.conf + p.dprime.conf + p.meta_dprime.conf +
+  p.c.metadelta + p.dprime.metadelta + p.meta_dprime.metadelta +
+  plot_layout(nrow=2, guides='collect')
+```
+::::
+:::
+
+
+## meta-$\Delta$ is reliable for one month
+
+```{r}
+#| label: reliability_models
+#| include: false
+pairs_plot <- function(draws, draws.cor, session1, session2, variable, label=NULL,
+                       text_x=NULL, text_y=NULL, text_size=4,
+                       size=1, linewidth=.1, alpha=.1, lims=c(0, 3)) {
+  if (is.null(text_x))
+    text_x <- lims[1] + (lims[2]-lims[1])*3/4
+  if (is.null(text_y))
+    text_y <- lims[1] + (lims[2]-lims[1])/8
+
+  sessions_to_days <- tibble(
+    session=seq_len(4),
+    day=c('1', '3/5', '7', '31')
+  )
+  day1 <- recode_values(session1, from=sessions_to_days$session, to=sessions_to_days$day)
+  day2 <- recode_values(session2, from=sessions_to_days$session, to=sessions_to_days$day)
+  
+  draws |>
+    filter(session %in% c(session1, session2)) |>
+    median_qi(.value) |>
+    pivot_wider(names_from=session, values_from=c(.value, .lower, .upper)) |>
+    ggplot() +
+    aes_string(x=paste0('.value_', session1), y=paste0('.value_', session2)) +
+    geom_errorbar(aes_string(xmin=paste0('.lower_', session1),
+                             xmax=paste0('.upper_', session1)),
+                  linewidth=linewidth, alpha=alpha) +
+    geom_errorbar(aes_string(ymin=paste0('.lower_', session2),
+                             ymax=paste0('.upper_', session2)),
+                  linewidth=linewidth, alpha=alpha) +
+    geom_abline(slope=1, intercept=0, linetype='dashed') +
+    geom_point(size=size) +
+    xlab(parse(text=paste0(label, '~(Day~', day1, ')'))) +
+    ylab(parse(text=paste0(label, '~(Day~', day2, ')'))) +
+    geom_label(aes_string(x='x', y='y', label=paste0('r_', session1, '_', session2)),
+               data=draws.cor |>
+                 mutate(x=text_x, y=text_y),
+               hjust=.5, vjust=.5, size=text_size) +
+    coord_fixed(xlim=lims, ylim=lims, expand=FALSE) +
+    theme_bw(base_size=18, ink='#361a54', paper='#fafafa') +
+    theme(panel.border=element_rect(linewidth=1.5),
+          axis.line=element_blank())
+}
+
+m.reliability <- readRDS('../reliability.rds')
+
+## obtain model estimates
+draws.linpred <- m.reliability$data |>
+  expand(participant, session) |>
+  add_metacognitive_bias_draws(m.reliability, by_response=FALSE) |>
+  group_by(participant, session) |>
+  select(-.row) |>
+  rename(.value=metacognitive_bias)
+
+## compute posteriors over test-retest correlations
+draws.cor <- draws.linpred |>
+  pivot_wider(names_from=session, values_from=.value, names_prefix='session') |>
+  group_by(.draw) |>
+  summarize(r12=cor(session1, session2, use='complete.obs'),
+            r13=cor(session1, session3, use='complete.obs'),
+            r14=cor(session1, session4, use='complete.obs')) |>
+  median_qi(r12, r13, r14) |>
+  mutate(r_1_2=sprintf('r = %.2f [%.2f, %.2f]', r12, r12.lower, r12.upper),
+         r_1_3=sprintf('r = %.2f [%.2f, %.2f]', r13, r13.lower, r13.upper),
+         r_1_4=sprintf('r = %.2f [%.2f, %.2f]', r14, r14.lower, r14.upper)) |>
+  select(r_1_2, r_1_3, r_1_4)
+```
+
+<br>
+
+:::{.r-stack}
+::::{.fragment}
+```{r}
+#| label: fig_reliability_1
+#| fig-width: 10
+#| fig-height: 4
+p.reliability.1.2 <- pairs_plot(draws.linpred, draws.cor, 1, 2,
+                                'meta_delta', label='"meta-"*Delta',
+                                text_x=2, text_y=1/3)
+p.reliability.1.3 <- pairs_plot(draws.linpred, draws.cor, 1, 3,
+                                'meta_delta', label='"meta-"*Delta',
+                                text_x=2, text_y=1/3)
+p.reliability.1.4 <- pairs_plot(draws.linpred, draws.cor, 1, 4,
+                                'meta_delta', label='"meta-"*Delta',
+                                text_x=2, text_y=1/3)
+
+p.reliability.1.2 + hide_plot(p.reliability.1.3) + hide_plot(p.reliability.1.4) +
+  plot_layout(nrow=1)
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_reliability_2
+#| fig-width: 10
+#| fig-height: 4
+p.reliability.1.2 + p.reliability.1.3 + hide_plot(p.reliability.1.4) +
+  plot_layout(nrow=1)
+```
+::::
+
+::::{.fragment}
+```{r}
+#| label: fig_reliability_3
+#| fig-width: 10
+#| fig-height: 4
+p.reliability.1.2 + p.reliability.1.3 + p.reliability.1.4 +
+  plot_layout(nrow=1)
+```
+::::
+:::
+
+
+## Conclusions
+
+<br>
+<br>
+
+:::{.incremental .much-smaller}
+1. Mean confidence is **not** a valid measure of metacognitive bias
+2. Metacognitive bias seems important, but previous studies are subject to performance confounds
+3. For those already using $M$-ratio to quantify metacognitive efficiency, meta-$\Delta$ provides an **independent**, **unbiased**, and **highly reliable**<br>measure of metacognitive bias
+:::
+
+
+## `hmetad`: an `R` package for hierarchical Bayesian modeling of confidence ratings {.dark}
+
+:::{.columns}
+
+::::{.column width="60%"}
+
+:::::{.tiny}
+<br>
+:::::
+
+![](figures/hmetad_qr.svg){.center-horizontally width="50%"}
+::::
+
+
+::::{.column width="35%" .much-smaller}
+:::::{style="font-size: 0.15em"}
+<br>
+:::::
+
+``` r
+## fit a multilevel meta-d' model
+m <- fit_metad(
+  bf(
+    N ~ 1 + (1 | participant),
+    dprime ~ 1 + (1 | participant),
+    c ~ 1 + (1 | participant),
+    metac2zero1diff ~ 1 + (1 | participant),
+    metac2one1diff ~ 1 + (1 | participant)
+  ), data=d, ...
+)
+
+## compute meta-delta by participant
+d |>
+  distinct(participant) |>
+  add_metacognitive_bias_draws(m) |>
+  median_qi()
+```
+::::
+
+::::{.column width="5%" .much-smaller}
+::::
+:::
+
+
+# Thank you! {.dark}
+
+<br><br>
+
+:::{.columns .much-smaller}
+
+::::{.column width="40%"}
+![](https://images.squarespace-cdn.com/content/v1/5616b377e4b0670f148ff742/2d724e06-d225-4040-8783-b5e0da6f5ab5/tianqi.png){.center-horizontally width="90%"}
+
+:::::{.center-flex}
+**ZHAN Tianqi**
+:::::
+::::
+
+::::{.column width="40%"}
+![](https://images.squarespace-cdn.com/content/v1/5616b377e4b0670f148ff742/2ae89835-9143-4c93-a8a7-3a203337b812/steve.png){.center-horizontally width="90%"}
+
+:::::{.center-flex}
+**Prof. Stephen Fleming**
+:::::
+::::
+
+::::{.column width="20%"}
+![](figures/hmetad_qr.svg){.center-horizontally width="100%"}
+
+![](https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/European_Research_Council_logo.svg/500px-European_Research_Council_logo.svg.png){.center-horizontally width="33%" style="background-color: #fafafa; padding: 5px;"}
+::::
+
+:::
+
+:::{.box .tiny .absolute top=25 right=25 style="line-height: 0.75; background-color: #fafafa;"}
+Kevin O'Neill, PhD <br>
+<kevin.o'neill@ucl.ac.uk>{style="color: #ba82ff;"} <br>
+<https://kevingoneill.github.io>{style="color: #ba82ff;"}
+:::
+
+
+## References {.allow-frame-breaks}
