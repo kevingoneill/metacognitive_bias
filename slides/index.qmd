@@ -1275,7 +1275,7 @@ d |>
 ::::{.column width="20%"}
 ![](figures/hmetad_qr.svg){.center-horizontally width="100%"}
 
-![](https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/European_Research_Council_logo.svg/500px-European_Research_Council_logo.svg.png){.center-horizontally width="33%" style="background-color: #fafafa; padding: 5px;"}
+![](figures/erc_logo.svg){.center-horizontally width="33%" style="background-color: #fafafa; padding: 5px;"}
 ::::
 
 :::

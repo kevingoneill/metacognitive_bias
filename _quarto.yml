@@ -1,0 +1,29 @@
+project:
+  type: website
+  render:
+    - slides/index.qmd
+    - index.qmd
+website:
+  title: A measure of metacognitive bias you can be confident in
+  site-path: /metacognitive_bias/
+  search: false
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: slides/index.html
+        text: Slides
+        target: _blank
+      - href: https://osf.io/preprints/psyarxiv/q7pwd
+        text: Manuscript
+        target: _blank
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+    toc: false
+
+
+

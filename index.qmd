@@ -1,0 +1,9 @@
+---
+title: "A measure of metacognitive bias you can be confident in"
+---
+
+This website hosts slides for the CogSci 2026 talk "A measure of metacognitive bias you can be confident in".
+
+
+### Citation
+> O'Neill, K., Zhan, T., \& Fleming, S. M. (2026, April 30). A measure of metacognitive bias you can be confident in. Retrieved from osf.io/preprints/psyarxiv/q7pwd_v1

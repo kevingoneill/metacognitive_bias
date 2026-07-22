@@ -1,6 +1,8 @@
 **/*.*~
 **/*.rds
 
-slides/slides.html
-slides/slides_files
-slides/slides_cache
+slides/index.html
+slides/index_files
+slides/index_cache
+/.quarto/
+**/*.quarto_ipynb
