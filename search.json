@@ -1,0 +1,135 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "A measure of metacognitive bias you can be confident in",
+    "section": "",
+    "text": "This website hosts slides for the CogSci 2026 talk “A measure of metacognitive bias you can be confident in”.\n\nCitation\n\nO’Neill, K., Zhan, T., & Fleming, S. M. (2026, April 30). A measure of metacognitive bias you can be confident in. Retrieved from osf.io/preprints/psyarxiv/q7pwd_v1"
+  },
+  {
+    "objectID": "slides/index.html#confidence-matters",
+    "href": "slides/index.html#confidence-matters",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Confidence matters",
+    "text": "Confidence matters\n\nGroup decision-making (Bang et al., 2017; Bang et al., 2020)\nAdvice giving and taking (Hertz et al., 2017; Pescetelli et al., 2021)\nInformation seeking (Schulz et al., 2023; Van Marcke & Desender, 2025)\nSelf-beliefs (Katyal et al., 2025; Seow et al., 2021)\nMental health (Hoven et al., 2019; Katyal & Fleming, 2026; Rouault et al., 2018)"
+  },
+  {
+    "objectID": "slides/index.html#an-empirical-approach",
+    "href": "slides/index.html#an-empirical-approach",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "An empirical approach",
+    "text": "An empirical approach\nIf we’re interested in one’s overall level of confidence, let’s simply compute mean confidence!\n\n\n\n\n\\[\n\\mathbb{E}\\left[C\\right] = \\frac{1}{N}\\sum_n C_n = \\sum_c P(C=c) c\n\\]\n\n\n\n\n\n\n\nPro: high face validity\nCon: confounded with Type I performance"
+  },
+  {
+    "objectID": "slides/index.html#type-i-and-type-ii-decisions",
+    "href": "slides/index.html#type-i-and-type-ii-decisions",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Type I and Type II decisions",
+    "text": "Type I and Type II decisions\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nClarke et al. (1959)"
+  },
+  {
+    "objectID": "slides/index.html#quantifying-type-i-decisions",
+    "href": "slides/index.html#quantifying-type-i-decisions",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Quantifying Type I decisions",
+    "text": "Quantifying Type I decisions\n\n\n\n\n\nSensitivity (\\(d'\\))\nHow much do responses distinguish between stimuli?\n\n\n\nResponse Bias (\\(c\\))\nIs one response more likely overall?\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nGreen & Swets (1966)"
+  },
+  {
+    "objectID": "slides/index.html#quantifying-type-i-decisions-1",
+    "href": "slides/index.html#quantifying-type-i-decisions-1",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Quantifying Type I decisions",
+    "text": "Quantifying Type I decisions\n\n\n\n\n\n\nStimulus = 0\nStimulus = 1\n\n\n\n\nResponse = 0\nCorrect Rejection\nMiss\n\n\nResponse = 1\nFalse Alarm\nHit\n\n\n\n\n\nGreen & Swets (1966)"
+  },
+  {
+    "objectID": "slides/index.html#quantifying-type-ii-decisions",
+    "href": "slides/index.html#quantifying-type-ii-decisions",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Quantifying Type II decisions",
+    "text": "Quantifying Type II decisions\n\n\n\n\n\n\n\nStimulus = 0\nStimulus = 1\n\n\n\n\nResponse = 0\nCorrect Rejection\nMiss\n\n\nResponse = 1\nFalse Alarm\nHit\n\n\n\n\n\n\n\n\n\nAccuracy = 0\nAccuracy = 1\n\n\n\n\nConfidence = low\nCorrect Rejection 2\nMiss 2\n\n\nConfidence = high\nFalse Alarm 2\nHit 2\n\n\n\n\n\n\n\nWe can extend signal detection theoryto model confidence ratings!\n\n\nFleming & Lau (2014)"
+  },
+  {
+    "objectID": "slides/index.html#the-meta-d-model",
+    "href": "slides/index.html#the-meta-d-model",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "The meta-d’ model",
+    "text": "The meta-d’ model\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nManiscalco & Lau (2012); Maniscalco & Lau (2014)"
+  },
+  {
+    "objectID": "slides/index.html#the-meta-d-model-1",
+    "href": "slides/index.html#the-meta-d-model-1",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "The meta-d’ model",
+    "text": "The meta-d’ model\nWe can directly compare sensitivityfor Type I and Type II decisions:\n\n\n\n\n\n\\[\n\\begin{align*}\nM &= \\frac{\\textrm{meta-}d'}{d'}\n\\end{align*}\n\\]\n\n\nmetacognitive sensitivity Type I sensitivity\n\nmetacognitiveefficiency\n\n\n\n\\(M\\)-ratio is an independent measure of  the relationship between confidence and accuracy"
+  },
+  {
+    "objectID": "slides/index.html#m-distance",
+    "href": "slides/index.html#m-distance",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "\\(m\\)-distance",
+    "text": "\\(m\\)-distance\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSherman et al. (2018)"
+  },
+  {
+    "objectID": "slides/index.html#m-distance-1",
+    "href": "slides/index.html#m-distance-1",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "\\(m\\)-distance",
+    "text": "\\(m\\)-distance\n\n\n\n\\[\nm\\textrm{-distance}_0 = \\frac{\\textrm{meta-}c - \\textrm{meta-}c_2^0}{\\textrm{meta-}d'}\n\\]\n\n\\[\nm\\textrm{-distance}_1 = \\frac{\\textrm{meta-}c_2^1 - \\textrm{meta-}c}{\\textrm{meta-}d'}\n\\]\n\n\nPro: independent of Type I criterion\nCon: only defined for models with two confidence levels\nCon: still confounded with Type I performance\n\nSherman et al. (2018)"
+  },
+  {
+    "objectID": "slides/index.html#meta-delta",
+    "href": "slides/index.html#meta-delta",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "meta-\\(\\Delta\\)",
+    "text": "meta-\\(\\Delta\\)\n\n\n\nSame idea, with two adjustments:\n\n\nDon’t normalize distances by meta-\\(d'\\) (Dijkstra et al., 2024)\nTake the average of all confidence criteria\n\n\n\n\n\\[\\begin{align*}\n    \\textrm{meta-}\\Delta_r &= \\left|\\frac{1}{K-1}\\sum_{k=1}^{K-1}\\left[\\textrm{meta-}c_{2,k}^r\\right] - \\textrm{meta-}c\\right|\n\\end{align*}\\]\n\n\n\\[\\begin{align*}\n    \\textrm{meta-}\\Delta_r &= \\sum_{k=1}^{K-1} \\frac{K - k}{K-1}\\textrm{dmeta-}c_{2,k}^r\n\\end{align*}\\]"
+  },
+  {
+    "objectID": "slides/index.html#both-measures-are-sensitive-to-metacognitive-bias",
+    "href": "slides/index.html#both-measures-are-sensitive-to-metacognitive-bias",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Both measures are sensitive to metacognitive bias",
+    "text": "Both measures are sensitive to metacognitive bias"
+  },
+  {
+    "objectID": "slides/index.html#mean-confidence-is-confounded-by-type-i-performance",
+    "href": "slides/index.html#mean-confidence-is-confounded-by-type-i-performance",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Mean confidence is confounded by Type I performance",
+    "text": "Mean confidence is confounded by Type I performance"
+  },
+  {
+    "objectID": "slides/index.html#both-measures-fail-under-model-misspecification",
+    "href": "slides/index.html#both-measures-fail-under-model-misspecification",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Both measures fail undermodel misspecification",
+    "text": "Both measures fail undermodel misspecification"
+  },
+  {
+    "objectID": "slides/index.html#meta-delta-is-reliable-for-one-month",
+    "href": "slides/index.html#meta-delta-is-reliable-for-one-month",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "meta-\\(\\Delta\\) is reliable for one month",
+    "text": "meta-\\(\\Delta\\) is reliable for one month"
+  },
+  {
+    "objectID": "slides/index.html#conclusions",
+    "href": "slides/index.html#conclusions",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "Conclusions",
+    "text": "Conclusions\n \n\n\nMean confidence is not a valid measure of metacognitive bias\nMetacognitive bias seems important, but previous studies are subject to performance confounds\nFor those already using \\(M\\)-ratio to quantify metacognitive efficiency, meta-\\(\\Delta\\) provides an independent, unbiased, and highly reliablemeasure of metacognitive bias"
+  },
+  {
+    "objectID": "slides/index.html#hmetad-an-r-package-for-hierarchical-bayesian-modeling-of-confidence-ratings",
+    "href": "slides/index.html#hmetad-an-r-package-for-hierarchical-bayesian-modeling-of-confidence-ratings",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "hmetad: an R package for hierarchical Bayesian modeling of confidence ratings",
+    "text": "hmetad: an R package for hierarchical Bayesian modeling of confidence ratings\n\n\n\n\n\n\n\n\n\n\n## fit a multilevel meta-d' model\nm &lt;- fit_metad(\n  bf(\n    N ~ 1 + (1 | participant),\n    dprime ~ 1 + (1 | participant),\n    c ~ 1 + (1 | participant),\n    metac2zero1diff ~ 1 + (1 | participant),\n    metac2one1diff ~ 1 + (1 | participant)\n  ), data=d, ...\n)\n\n## compute meta-delta by participant\nd |&gt;\n  distinct(participant) |&gt;\n  add_metacognitive_bias_draws(m) |&gt;\n  median_qi()"
+  },
+  {
+    "objectID": "slides/index.html#references",
+    "href": "slides/index.html#references",
+    "title": "A measure of metacognitive biasyou can be confident in",
+    "section": "References",
+    "text": "References\n\n\n\n\nBang, D., Aitchison, L., Moran, R., Herce Castanon, S., Rafiee, B., Mahmoodi, A., Lau, J. Y., Latham, P. E., Bahrami, B., & Summerfield, C. (2017). Confidence matching in group decision-making. Nature Human Behaviour, 1(6), 0117.\n\n\nBang, D., Ershadmanesh, S., Nili, H., & Fleming, S. M. (2020). Private–public mappings in human prefrontal cortex. Elife, 9, e56477.\n\n\nClarke, F. R., Birdsall, T. G., & Tanner Jr, W. P. (1959). Two types of ROC curves and definitions of parameters. The Journal of the Acoustical Society of America, 31(5), 629–630.\n\n\nDijkstra, N., Mazor, M., & Fleming, S. M. (2024). Confidence ratings do not distinguish imagination from reality. Journal of Vision, 24(5), 13–13. https://doi.org/10.1167/jov.24.5.13\n\n\nFleming, S. M., & Lau, H. C. (2014). How to measure metacognition. Frontiers in Human Neuroscience, 8, 443.\n\n\nGreen, D. Marvin., & Swets, J. A. (1966). Signal detection theory and psychophysics. Wiley.\n\n\nHertz, U., Palminteri, S., Brunetti, S., Olesen, C., Frith, C. D., & Bahrami, B. (2017). Neural computations underpinning the strategic management of influence in advice giving. Nature Communications, 8(1), 2191.\n\n\nHoven, M., Lebreton, M., Engelmann, J. B., Denys, D., Luigjes, J., & Holst, R. J. van. (2019). Abnormalities of confidence in psychiatry: An overview and future perspectives. Translational Psychiatry, 9(1), 268.\n\n\nKatyal, S., & Fleming, S. M. (2026). Gender and anxiety reveal distinct computational sources of underconfidence. Psychological Medicine, 56.\n\n\nKatyal, S., Huys, Q. J., Dolan, R. J., & Fleming, S. M. (2025). Distorted learning from local metacognition supports transdiagnostic underconfidence. Nature Communications, 16(1), 1854.\n\n\nManiscalco, B., & Lau, H. (2012). A signal detection theoretic approach for estimating metacognitive sensitivity from confidence ratings. Consciousness and Cognition, 21(1), 422–430.\n\n\nManiscalco, B., & Lau, H. (2014). Signal detection theory analysis of type 1 and type 2 data: Meta-d’, response-specific meta-d’, and the unequal variance SDT model. In The cognitive neuroscience of metacognition (pp. 25–66). Springer.\n\n\nPescetelli, N., Hauperich, A.-K., & Yeung, N. (2021). Confidence, advice seeking and changes of mind in decision making. Cognition, 215, 104810.\n\n\nRouault, M., Seow, T., Gillan, C. M., & Fleming, S. M. (2018). Psychiatric symptom dimensions are associated with dissociable shifts in metacognition but not task performance. Biological Psychiatry, 84(6), 443–451.\n\n\nSchulz, L., Fleming, S. M., & Dayan, P. (2023). Metacognitive computations for information search: Confidence in control. Psychological Review, 130(3), 604.\n\n\nSeow, T. X., Rouault, M., Gillan, C. M., & Fleming, S. M. (2021). How local and global metacognition shape mental health. Biological Psychiatry, 90(7), 436–446.\n\n\nSherman, M. T., Seth, A. K., & Barrett, A. B. (2018). Quantifying metacognitive thresholds using signal-detection theory. bioRxiv. https://doi.org/10.1101/361543\n\n\nVan Marcke, H., & Desender, K. (2025). Context-dependent role of confidence in information-seeking. Cognition, 263, 106219."
+  }
+]
