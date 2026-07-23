@@ -32,7 +32,7 @@
     "href": "slides/index.html#quantifying-type-i-decisions",
     "title": "A measure of metacognitive biasyou can be confident in",
     "section": "Quantifying Type I decisions",
-    "text": "Quantifying Type I decisions\n\n\n\n\n\nSensitivity (\\(d'\\))\nHow much do responses distinguish between stimuli?\n\n\n\nResponse Bias (\\(c\\))\nIs one response more likely overall?\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nGreen & Swets (1966)"
+    "text": "Quantifying Type I decisions\n\n\n\n\n\nSensitivity (\\(d'\\))\nHow much do responses distinguish between stimuli?\n\n\n\nResponse Bias (\\(c\\))\nIs one response more likely overall?\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nGreen & Swets (1966)"
   },
   {
     "objectID": "slides/index.html#quantifying-type-i-decisions-1",
@@ -46,7 +46,7 @@
     "href": "slides/index.html#quantifying-type-ii-decisions",
     "title": "A measure of metacognitive biasyou can be confident in",
     "section": "Quantifying Type II decisions",
-    "text": "Quantifying Type II decisions\n\n\n\n\n\n\n\nStimulus = 0\nStimulus = 1\n\n\n\n\nResponse = 0\nCorrect Rejection\nMiss\n\n\nResponse = 1\nFalse Alarm\nHit\n\n\n\n\n\n\n\n\n\nAccuracy = 0\nAccuracy = 1\n\n\n\n\nConfidence = low\nCorrect Rejection 2\nMiss 2\n\n\nConfidence = high\nFalse Alarm 2\nHit 2\n\n\n\n\n\n\n\nWe can extend signal detection theoryto model confidence ratings!\n\n\nFleming & Lau (2014)"
+    "text": "Quantifying Type II decisions\n\n\n\n\n\n\nAccuracy = 0\nAccuracy = 1\n\n\n\n\nConfidence = low\nCorrect Rejection 2\nMiss 2\n\n\nConfidence = high\nFalse Alarm 2\nHit 2\n\n\n\n\n\n\nWe can extend signal detection theoryto model confidence ratings!\n\n\nFleming & Lau (2014)"
   },
   {
     "objectID": "slides/index.html#the-meta-d-model",
@@ -60,14 +60,14 @@
     "href": "slides/index.html#the-meta-d-model-1",
     "title": "A measure of metacognitive biasyou can be confident in",
     "section": "The meta-d’ model",
-    "text": "The meta-d’ model\nWe can directly compare sensitivityfor Type I and Type II decisions:\n\n\n\n\n\n\\[\n\\begin{align*}\nM &= \\frac{\\textrm{meta-}d'}{d'}\n\\end{align*}\n\\]\n\n\nmetacognitive sensitivity Type I sensitivity\n\nmetacognitiveefficiency\n\n\n\n\\(M\\)-ratio is an independent measure of  the relationship between confidence and accuracy"
+    "text": "The meta-d’ model\nWe can directly compare sensitivityfor Type I and Type II decisions:\n\n\n\n\n\n\\[\n\\begin{align*}\nM &= \\frac{\\textrm{meta-}d'}{d'}\n\\end{align*}\n\\]\n\n\nmetacognitive sensitivity Type I sensitivity\n\nmetacognitiveefficiency"
   },
   {
     "objectID": "slides/index.html#m-distance",
     "href": "slides/index.html#m-distance",
     "title": "A measure of metacognitive biasyou can be confident in",
     "section": "\\(m\\)-distance",
-    "text": "\\(m\\)-distance\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSherman et al. (2018)"
+    "text": "\\(m\\)-distance\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSherman et al. (2018)"
   },
   {
     "objectID": "slides/index.html#m-distance-1",
@@ -81,7 +81,7 @@
     "href": "slides/index.html#meta-delta",
     "title": "A measure of metacognitive biasyou can be confident in",
     "section": "meta-\\(\\Delta\\)",
-    "text": "meta-\\(\\Delta\\)\n\n\n\nSame idea, with two adjustments:\n\n\nDon’t normalize distances by meta-\\(d'\\) (Dijkstra et al., 2024)\nTake the average of all confidence criteria\n\n\n\n\n\\[\\begin{align*}\n    \\textrm{meta-}\\Delta_r &= \\left|\\frac{1}{K-1}\\sum_{k=1}^{K-1}\\left[\\textrm{meta-}c_{2,k}^r\\right] - \\textrm{meta-}c\\right|\n\\end{align*}\\]\n\n\n\\[\\begin{align*}\n    \\textrm{meta-}\\Delta_r &= \\sum_{k=1}^{K-1} \\frac{K - k}{K-1}\\textrm{dmeta-}c_{2,k}^r\n\\end{align*}\\]"
+    "text": "meta-\\(\\Delta\\)\n\n\n\nSame idea, with two adjustments:\n\n\nDon’t normalize distances by meta-\\(d'\\) (Dijkstra et al., 2024)\nTake the average of all confidence criteria\n\n\n\n\n\\[\\begin{align*}\n    \\textrm{meta-}\\Delta_r &= \\frac{1}{K-1}\\sum_{k=1}^{K-1}\\left[\\textrm{meta-}c_{2,k}^r\\right] - \\textrm{meta-}c\n\\end{align*}\\]\n\n\n\\[\\begin{align*}\n    \\textrm{meta-}\\Delta_r &= \\sum_{k=1}^{K-1} \\frac{K - k}{K-1}\\textrm{dmeta-}c_{2,k}^r\n\\end{align*}\\]"
   },
   {
     "objectID": "slides/index.html#both-measures-are-sensitive-to-metacognitive-bias",
@@ -116,7 +116,7 @@
     "href": "slides/index.html#conclusions",
     "title": "A measure of metacognitive biasyou can be confident in",
     "section": "Conclusions",
-    "text": "Conclusions\n \n\n\nMean confidence is not a valid measure of metacognitive bias\nMetacognitive bias seems important, but previous studies are subject to performance confounds\nFor those already using \\(M\\)-ratio to quantify metacognitive efficiency, meta-\\(\\Delta\\) provides an independent, unbiased, and highly reliablemeasure of metacognitive bias"
+    "text": "Conclusions\n \n\n\nMean confidence is not a valid measure of metacognitive bias\nMetacognitive bias seems important, but previous studies aresubject to performance confounds\nFor those already using \\(M\\)-ratio to quantify metacognitive efficiency, meta-\\(\\Delta\\) provides an independent, unbiased, and highly reliablemeasure of metacognitive bias"
   },
   {
     "objectID": "slides/index.html#hmetad-an-r-package-for-hierarchical-bayesian-modeling-of-confidence-ratings",
